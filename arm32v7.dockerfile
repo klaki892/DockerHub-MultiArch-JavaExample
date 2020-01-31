@@ -1,6 +1,6 @@
 FROM debian:buster AS builder
 
-# Download QEMU, see https://github.com/docker/hub-feedback/issues/1261
+## Download QEMU, see https://github.com/docker/hub-feedback/issues/1261
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
