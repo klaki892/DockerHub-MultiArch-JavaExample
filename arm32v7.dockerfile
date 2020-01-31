@@ -12,7 +12,7 @@ RUN export QEMU_USER_STATIC_LATEST_TAG=$(curl -s https://api.github.com/repos/mu
     curl -SL "https://github.com/multiarch/qemu-user-static/releases/download/${QEMU_USER_STATIC_LATEST_TAG}/x86_64_qemu-arm-static.tar.gz" \
         | tar xzv --directory /
 
-FROM adoptopenjdk:latest
+FROM arm32v7/adoptopenjdk:latest
 
 COPY . /workdir
 
