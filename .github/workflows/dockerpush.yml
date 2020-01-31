@@ -34,15 +34,8 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin  
       - name: prep image
         run: |
-
-          # Strip git ref prefix from version
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-
           docker save image-amd:$VERSION > $HOME/image.tar
       - name: save image
         uses: actions/upload-artifact@v1
