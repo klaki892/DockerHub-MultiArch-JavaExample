@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [$Env:ARCH-1, $Env:ARCH-2]
+        os: [$ARCH-1, $ARCH-2]
 
     steps:
       - name: Checkout Repo
