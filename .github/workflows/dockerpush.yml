@@ -1,0 +1,90 @@
+name: Docker
+
+on:
+  push:
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+  # Run tests for any PRs.
+  pull_request:
+
+env:
+  # TODO: Change variable to your image's name.
+  IMAGE_NAME: multiarch-java-helloworld
+  ARCH-1: "ARM32"
+  ARCH-2: "ubuntu-latest"
+
+jobs:
+  # Run tests.
+  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [$Env:ARCH-1, $Env:ARCH-2]
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Build Docker Image
+        run: |
+            docker build --name $Env:IMAGE_NAME-${{matrix.os}} . --file Dockerfile
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin  
+      - name: build image
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME-${{matrix.os}}
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag image $IMAGE_ID:$VERSION
+          docker save $IMAGE_ID:$VERSION > $Env:HOME/image.tar
+      - name: save image
+        uses: actions/upload-artifact@v1
+        with:
+          name: image-${{matrix.os}}.tar
+          path:  $Env:HOME
+           
+
+
+#   # Push image to GitHub Package Registry.
+#   # See also https://docs.docker.com/docker-hub/builds/
+#   push:
+#     # Ensure test job passes before pushing image.
+#     needs: [build]
+
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Build image
+#         run: docker build . --file Dockerfile --tag image
+
+#       - name: Log into registry
+#         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+#       - name: Push image
+#         run: |
+#           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+
+#           # Strip git ref prefix from version
+#           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+#           # Strip "v" prefix from tag name
+#           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+#           # Use Docker `latest` tag convention
+#           [ "$VERSION" == "master" ] && VERSION=latest
+
+#           echo IMAGE_ID=$IMAGE_ID
+#           echo VERSION=$VERSION
+
+#           docker tag image $IMAGE_ID:$VERSION
+#           docker push $IMAGE_ID:$VERSION
