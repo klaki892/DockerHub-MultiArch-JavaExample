@@ -19,7 +19,7 @@ jobs:
   # Run tests.
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   build:
-    runs-on: [ARM32]
+    runs-on: [ubuntu-latest]
 
     steps:
       - name: Checkout Repo
