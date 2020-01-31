@@ -26,15 +26,16 @@ jobs:
         uses: actions/checkout@v2
       - name: Build Docker Image
         run: |
-            docker build -t $Env:IMAGE_NAME-ARM32 . --file Dockerfile
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME-ARM32
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          docker build -t image-amd:$VERSION . --file Dockerfile
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin  
-      - name: build image
+      - name: prep image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME-ARM32
 
           # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
           # Strip "v" prefix from tag name
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
@@ -42,12 +43,14 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          docker tag image $IMAGE_ID:$VERSION
-          docker save $IMAGE_ID:$VERSION > $Env:HOME/image.tar
+#          docker tag image $IMAGE_ID:$VERSION
+#          docker save $IMAGE_ID:$VERSION > $Env:HOME/image.tar
+          docker save image-amd:$VERSION > $HOME/image.tar
       - name: save image
         uses: actions/upload-artifact@v1
         with:
-          name: image-${{matrix.os}}.tar
+#          name: image-${{matrix.os}}.tar
+          name: image.tar
           path:  $HOME
            
 
