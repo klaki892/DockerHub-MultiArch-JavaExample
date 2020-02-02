@@ -12,15 +12,16 @@ RUN export QEMU_USER_STATIC_LATEST_TAG=$(curl -s https://api.github.com/repos/mu
     curl -SL "https://github.com/multiarch/qemu-user-static/releases/download/${QEMU_USER_STATIC_LATEST_TAG}/x86_64_qemu-arm-static.tar.gz" \
         | tar xzv --directory /
 
-#FROM openjdk:11.0.6-jdk-slim as builder
-COPY Main.java /
-RUN javac Main.java
-#CMD ["java", "Main"]
-#CMD ["uname", "-a"]
+FROM maven:3.6.3-jdk-14 as javaBuilder
+WORKDIR /app
+COPY pom.xml .
+RUN mvn -e -B dependency:resolve
+COPY src ./src
+RUN mvn -e -B package
 
 FROM arm32v7/openjdk:11-jre-slim
 #Add QEMU
 COPY --from=builder /qemu-arm-static /usr/bin
-#COPY --from=builder /Main.class /
-COPY --from=builder /Main.class /
-CMD ["java", "Main"]
+#Add java files
+COPY --from=javaBuilder /app/target/multiJavaArchBuild-1.0.jar /
+CMD ["java", "-jar", "/multiJavaArchBuild-1.0.jar"]
